@@ -1,0 +1,104 @@
+# Java 编译产物
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+*.rar
+
+# 编译输出目录
+bin/
+build/
+out/
+target/
+classes/
+gen/
+
+# Maven/Gradle 相关
+.mvn/
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+.gradletasknamecache
+
+# IntelliJ IDEA 配置文件
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+*.log
+*.versionsBackup
+.idea_modules/
+atlassian-ide-plugin.xml
+com_crashlytics_export_strings.xml
+crashlytics.properties
+crashlytics-build.properties
+fabric.properties
+
+# Eclipse 配置文件
+.classpath
+.project
+.settings/
+bin/
+.metadata/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.loadpath
+.recommenders
+
+# VS Code 配置文件
+.vscode/
+*.code-workspace
+.history/
+
+# 操作系统临时文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# 日志文件
+*.log
+logs/
+*.log.*
+
+# 临时文件和备份文件
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
+*.swp
+*~
+
+# 环境变量和配置文件
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+application-*.yml
+application-*.properties
+
+# 测试相关
+test-output/
+.coverage/
+.nyc_output/
+coverage/
+junitvmwatcher*.properties
+junit.properties
+hs_err_pid*
+replay_pid*
