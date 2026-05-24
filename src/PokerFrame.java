@@ -1,3 +1,4 @@
+import domain.Card;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
@@ -100,6 +101,7 @@ public class PokerFrame extends JFrame {
         playBtn.addActionListener(e -> playerPlay());
         passBtn.addActionListener(e -> {
             tipLabel.setText("陈思思选择不出，轮到下一家");
+            game.setLastPlayer(0);
             aiTurn();
         });
 
@@ -210,6 +212,9 @@ public class PokerFrame extends JFrame {
                 Timer timer = new Timer(1000, e -> aiTurn());
                 timer.setRepeats(false);
                 timer.start();
+            } else {
+                // 所有人都不出，清空lastCards
+                game.setLastCards(new ArrayList<>());
             }
             return;
         }

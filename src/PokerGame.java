@@ -127,4 +127,10 @@ public class PokerGame {
     public boolean isGameOver() {
         return playerCards.isEmpty() || ai1Cards.isEmpty() || ai2Cards.isEmpty();
     }
+    public String getWinner() {
+        if (playerCards.isEmpty()) return "陈思思赢了！";
+        if (ai1Cards.isEmpty()) return "丁兜兜赢了！";
+        if (ai2Cards.isEmpty()) return "谭小小赢了！";
+        return "";
+    }
 }
