@@ -6,35 +6,42 @@ import java.util.TreeSet;
 
 public class PokerFrame extends JFrame {
     private PokerGame game;
-    private JPanel playerPanel; // 陈思思（你）的手牌区域
-    private JPanel playArea;    // 出牌区域
-    private JLabel tipLabel;    // 提示文字
-    private JLabel ai1Label;    // 丁兜兜 剩余牌数
-    private JLabel ai2Label;    // 谭小小 剩余牌数
+    private JPanel playerPanel;
+    private JPanel playArea;
+    private JLabel tipLabel;
+    private JLabel ai1Label;
+    private JLabel ai2Label;
+    private JLabel scoreLabel; // 积分展示标签
 
     public PokerFrame() {
         game = new PokerGame();
         setTitle("Java斗地主 - 陈思思 VS 丁兜兜 VS 谭小小");
-        setSize(1000, 700);
+        setSize(1000, 750);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         getContentPane().setBackground(new Color(0, 100, 0));
 
-        // 顶部玩家信息
-        JPanel topPanel = new JPanel(new GridLayout(1, 3));
+        // 顶部玩家信息+积分面板
+        JPanel topPanel = new JPanel(new GridLayout(2, 3));
         topPanel.setOpaque(false);
-        ai1Label = new JLabel("丁兜兜：17张牌", SwingConstants.CENTER);
-        ai2Label = new JLabel("谭小小：17张牌", SwingConstants.CENTER);
-        JLabel playerLabel = new JLabel("陈思思（你）：17张牌", SwingConstants.CENTER);
-        ai1Label.setFont(new Font("微软雅黑", Font.BOLD, 16));
-        ai2Label.setFont(new Font("微软雅黑", Font.BOLD, 16));
-        playerLabel.setFont(new Font("微软雅黑", Font.BOLD, 16));
+
+        ai1Label = new JLabel("丁兜兜：17张牌 | 积分：0", SwingConstants.CENTER);
+        ai2Label = new JLabel("谭小小：17张牌 | 积分：0", SwingConstants.CENTER);
+        scoreLabel = new JLabel("陈思思（你）：17张牌 | 积分：0", SwingConstants.CENTER);
+
+        ai1Label.setFont(new Font("微软雅黑", Font.BOLD, 14));
+        ai2Label.setFont(new Font("微软雅黑", Font.BOLD, 14));
+        scoreLabel.setFont(new Font("微软雅黑", Font.BOLD, 14));
         ai1Label.setForeground(Color.WHITE);
         ai2Label.setForeground(Color.WHITE);
-        playerLabel.setForeground(Color.WHITE);
+        scoreLabel.setForeground(Color.WHITE);
+
         topPanel.add(ai1Label);
         topPanel.add(new JLabel(""));
         topPanel.add(ai2Label);
+        topPanel.add(new JLabel(""));
+        topPanel.add(scoreLabel);
+        topPanel.add(new JLabel(""));
         add(topPanel, BorderLayout.NORTH);
 
         // 中间提示+出牌区域
@@ -79,16 +86,16 @@ public class PokerFrame extends JFrame {
 
         // 叫地主事件
         callBtn.addActionListener(e -> {
-            game.callLord(0); // 0=陈思思（你）当地主
+            game.callLord(0);
             startGame();
             callBtn.setVisible(false);
             noCallBtn.setVisible(false);
             playBtn.setVisible(true);
             passBtn.setVisible(true);
         });
+
         noCallBtn.addActionListener(e -> {
-            // AI随机叫地主：1=丁兜兜，2=谭小小
-            int lord = (int)(Math.random()*2)+1;
+            int lord = (int) (Math.random() * 2) + 1;
             game.callLord(lord);
             startGame();
             callBtn.setVisible(false);
@@ -108,20 +115,18 @@ public class PokerFrame extends JFrame {
         setVisible(true);
     }
 
-    // 开始游戏，显示手牌
     private void startGame() {
         playerPanel.removeAll();
         TreeSet<Integer> cards = game.getPlayerCards();
         for (int id : cards) {
             playerPanel.add(new Card(id, game.getCardMap().get(id)));
         }
-        // 更新剩余牌数
         updateCardCount();
-        // 显示地主
+        updateScore();
+
         String lordName = game.getLord() == 0 ? "陈思思（你）" : game.getLord() == 1 ? "丁兜兜" : "谭小小";
         tipLabel.setText("地主是：" + lordName + "，地主先出牌");
 
-        // 如果地主是AI，先出牌
         if (game.getLord() == 1) {
             tipLabel.setText("丁兜兜（地主）出牌中...");
             Timer timer = new Timer(1000, e -> aiPlay(1));
@@ -137,7 +142,6 @@ public class PokerFrame extends JFrame {
         repaint();
     }
 
-    // 玩家（陈思思）出牌
     private void playerPlay() {
         ArrayList<Integer> selectedCards = new ArrayList<>();
         for (Component c : playerPanel.getComponents()) {
@@ -146,20 +150,32 @@ public class PokerFrame extends JFrame {
                 selectedCards.add(card.getLevel());
             }
         }
+
+        // 空牌校验
         if (selectedCards.isEmpty()) {
             JOptionPane.showMessageDialog(this, "陈思思，请选择要出的牌！");
             return;
         }
-        // 判断是否能出
-        if (!game.getLastCards().isEmpty() && !game.isBigger(selectedCards, game.getLastCards())) {
-            JOptionPane.showMessageDialog(this, "牌型不对或太小，不能出！");
+
+        // 非法牌型校验
+        int type = game.getCardType(selectedCards);
+        if (type == PokerGame.TYPE_ERROR) {
+            JOptionPane.showMessageDialog(this, "所选牌型不合法，请重新选择！\n支持：单张、对子、三张、三带一、三带二、顺子、连对、炸弹、王炸");
             return;
         }
-        // 出牌
+
+        // 压牌校验
+        if (!game.getLastCards().isEmpty() && !game.isBigger(selectedCards, game.getLastCards())) {
+            JOptionPane.showMessageDialog(this, "牌型不对或牌力太小，无法压制！");
+            return;
+        }
+
+        // 执行出牌
         game.removeCards(game.getPlayerCards(), selectedCards);
         game.setLastCards(selectedCards);
         game.setLastPlayer(0);
-        // 更新界面
+
+        // 刷新界面
         playerPanel.removeAll();
         for (int id : game.getPlayerCards()) {
             playerPanel.add(new Card(id, game.getCardMap().get(id)));
@@ -172,13 +188,16 @@ public class PokerFrame extends JFrame {
         for (int id : selectedCards) {
             playArea.add(new Card(id, game.getCardMap().get(id)));
         }
+
         updateCardCount();
-        // 判断游戏结束
+        updateScore();
+
+        // 游戏结束判定
         if (game.isGameOver()) {
-            JOptionPane.showMessageDialog(this, "🎉 陈思思赢了！恭喜！");
+            JOptionPane.showMessageDialog(this, game.getWinner());
             System.exit(0);
         }
-        // AI回合
+
         tipLabel.setText("轮到下一家出牌");
         revalidate();
         repaint();
@@ -187,64 +206,69 @@ public class PokerFrame extends JFrame {
         timer.start();
     }
 
-    // AI回合
     private void aiTurn() {
         int nextPlayer = (game.getLastPlayer() + 1) % 3;
         String aiName = nextPlayer == 1 ? "丁兜兜" : "谭小小";
         tipLabel.setText(aiName + "思考中...");
-
         Timer timer = new Timer(1000, e -> aiPlay(nextPlayer));
         timer.setRepeats(false);
         timer.start();
     }
 
-    // AI出牌
     private void aiPlay(int aiId) {
         TreeSet<Integer> aiCards = aiId == 1 ? game.getAi1Cards() : game.getAi2Cards();
         String aiName = aiId == 1 ? "丁兜兜" : "谭小小";
+        ArrayList<Integer> aiPlayCards = game.aiPlay(aiCards);
 
-        ArrayList<Integer> aiPlay = game.aiPlay(aiCards);
-        if (aiPlay.isEmpty()) {
+        // 不出牌逻辑
+        if (aiPlayCards.isEmpty()) {
             tipLabel.setText(aiName + "选择不出，轮到下一家");
             game.setLastPlayer(aiId);
-            // 如果下一家是玩家，结束AI回合
             if ((aiId + 1) % 3 != 0) {
                 Timer timer = new Timer(1000, e -> aiTurn());
                 timer.setRepeats(false);
                 timer.start();
             } else {
-                // 所有人都不出，清空lastCards
                 game.setLastCards(new ArrayList<>());
+                tipLabel.setText("所有人都不出，清空出牌轮次，重新出牌");
             }
             return;
         }
-        // 出牌
-        game.removeCards(aiCards, aiPlay);
-        game.setLastCards(aiPlay);
+
+        // AI出牌逻辑
+        game.removeCards(aiCards, aiPlayCards);
+        game.setLastCards(aiPlayCards);
         game.setLastPlayer(aiId);
-        // 更新界面
+
+        // 刷新界面
         playArea.removeAll();
         JLabel playTip = new JLabel(aiName + "出：", SwingConstants.CENTER);
         playTip.setForeground(Color.WHITE);
         playTip.setFont(new Font("微软雅黑", Font.PLAIN, 16));
         playArea.add(playTip);
-        for (int id : aiPlay) {
+        for (int id : aiPlayCards) {
             playArea.add(new Card(id, game.getCardMap().get(id)));
         }
+
         updateCardCount();
-        // 判断游戏结束
+        updateScore();
+
+        // 游戏结束判定
         if (game.isGameOver()) {
-            JOptionPane.showMessageDialog(this, aiName + "赢了！游戏结束");
+            JOptionPane.showMessageDialog(this, game.getWinner());
             System.exit(0);
         }
+
         tipLabel.setText(aiName + "出完牌，轮到下一家");
         revalidate();
         repaint();
-        // 下一家出牌
+
         if ((aiId + 1) % 3 != 0) {
             Timer timer = new Timer(1000, e -> aiTurn());
             timer.setRepeats(false);
             timer.start();
+        } else {
+            game.setLastCards(new ArrayList<>());
         }
     }
 
@@ -252,5 +276,12 @@ public class PokerFrame extends JFrame {
     private void updateCardCount() {
         ai1Label.setText("丁兜兜：" + game.getAi1Cards().size() + "张牌");
         ai2Label.setText("谭小小：" + game.getAi2Cards().size() + "张牌");
+    }
+
+    // 更新积分展示
+    private void updateScore() {
+        scoreLabel.setText("陈思思（你）：" + game.getPlayerCards().size() + "张牌 | 积分：" + PokerGame.playerScore);
+        ai1Label.setText("丁兜兜：" + game.getAi1Cards().size() + "张牌 | 积分：" + PokerGame.ai1Score);
+        ai2Label.setText("谭小小：" + game.getAi2Cards().size() + "张牌 | 积分：" + PokerGame.ai2Score);
     }
 }
