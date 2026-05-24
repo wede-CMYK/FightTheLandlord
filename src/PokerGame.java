@@ -3,13 +3,13 @@ import java.util.*;
 public class PokerGame {
     private HashMap<Integer, String> cardMap = new HashMap<>();
     private ArrayList<Integer> allCards = new ArrayList<>();
-    private TreeSet<Integer> playerCards = new TreeSet<>(); // 玩家手牌
-    private TreeSet<Integer> ai1Cards = new TreeSet<>();    // AI1手牌
-    private TreeSet<Integer> ai2Cards = new TreeSet<>();    // AI2手牌
+    private TreeSet<Integer> playerCards = new TreeSet<>(); // 陈思思（你）的手牌
+    private TreeSet<Integer> ai1Cards = new TreeSet<>();    // 丁兜兜的手牌
+    private TreeSet<Integer> ai2Cards = new TreeSet<>();    // 谭小小的手牌
     private TreeSet<Integer> lordCards = new TreeSet<>();   // 底牌
-    private int lord; // 地主：0=玩家，1=AI1，2=AI2
+    private int lord; // 地主：0=陈思思，1=丁兜兜，2=谭小小
     private ArrayList<Integer> lastCards = new ArrayList<>(); // 上一家出的牌
-    private int lastPlayer; // 上一家出牌的人
+    private int lastPlayer; // 上一家出牌的人：0=陈思思，1=丁兜兜，2=谭小小
 
     // 初始化牌
     public PokerGame() {
@@ -45,17 +45,15 @@ public class PokerGame {
         }
     }
 
-    // 叫地主（简单逻辑：玩家先叫，叫了就是地主）
-    public void callLord(boolean isCall) {
-        if (isCall) {
-            lord = 0;
-            playerCards.addAll(lordCards);
+    // 叫地主
+    public void callLord(int lordId) {
+        this.lord = lordId;
+        if (lordId == 0) {
+            playerCards.addAll(lordCards); // 陈思思当地主，拿底牌
+        } else if (lordId == 1) {
+            ai1Cards.addAll(lordCards); // 丁兜兜当地主，拿底牌
         } else {
-            // AI随机叫地主
-            Random r = new Random();
-            lord = r.nextInt(2) + 1;
-            if (lord == 1) ai1Cards.addAll(lordCards);
-            else ai2Cards.addAll(lordCards);
+            ai2Cards.addAll(lordCards); // 谭小小当地主，拿底牌
         }
     }
 
@@ -73,7 +71,7 @@ public class PokerGame {
                     && getPoint(cards.get(1)) == getPoint(cards.get(2))
                     && getPoint(cards.get(2)) == getPoint(cards.get(3))) return 9; // 炸弹
         }
-        return 0; // 其他牌型暂未实现
+        return 0; // 其他牌型
     }
 
     // 获取牌的点数
@@ -93,7 +91,7 @@ public class PokerGame {
         return Collections.max(newCards) > Collections.max(oldCards);
     }
 
-    // AI出牌（简单逻辑：出最小的能压的牌，不能就不出）
+    // AI出牌逻辑
     public ArrayList<Integer> aiPlay(TreeSet<Integer> aiCards) {
         ArrayList<Integer> result = new ArrayList<>();
         if (lastCards.isEmpty()) {
@@ -113,22 +111,20 @@ public class PokerGame {
         return result; // 空表示不出
     }
 
-    // getter方法
+    // getter/setter
     public TreeSet<Integer> getPlayerCards() { return playerCards; }
     public TreeSet<Integer> getAi1Cards() { return ai1Cards; }
     public TreeSet<Integer> getAi2Cards() { return ai2Cards; }
     public HashMap<Integer, String> getCardMap() { return cardMap; }
     public int getLord() { return lord; }
+    public ArrayList<Integer> getLastCards() { return lastCards; }
     public void setLastCards(ArrayList<Integer> cards) { lastCards = cards; }
+    public int getLastPlayer() { return lastPlayer; }
+    public void setLastPlayer(int player) { lastPlayer = player; }
     public void removeCards(TreeSet<Integer> set, ArrayList<Integer> cards) {
         set.removeAll(cards);
     }
     public boolean isGameOver() {
         return playerCards.isEmpty() || ai1Cards.isEmpty() || ai2Cards.isEmpty();
-    }
-    public String getWinner() {
-        if (playerCards.isEmpty()) return "你赢了！";
-        if (ai1Cards.isEmpty() || ai2Cards.isEmpty()) return "电脑赢了！";
-        return "";
     }
 }
